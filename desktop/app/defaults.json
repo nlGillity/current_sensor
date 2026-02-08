@@ -1,0 +1,11 @@
+{
+    "deviceName": "Arduino Nano",
+    "baudrate": 9600,
+    "parity": "None",
+    "bytesize": 8,
+    "stopbits": 1,
+    "timeout": 1,
+    "path": "/home/submarine/Projects/ATmega328P/sensor/desktop/records/",
+    "file": "Demo",
+    "extension": ".xlsx"
+}
