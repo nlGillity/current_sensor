@@ -5,17 +5,19 @@ TARGET = firmware
 AVRCCDIR = /usr/bin/
 
 # само название компилятора, мало ли, вдруг оно когда-нибудь поменяется
-CC = avr-g++
+CC = avr-gcc
 OBJCOPY = avr-objcopy
 
 # каталог в который будет осуществляться сборка, что бы не засерать остальные каталоги
 BUILD_DIR = build
+SOURCE_DIR = src
+INCLUDE_DIR = include
 
 # название контроллера для компилятора
 MCU = atmega328p
 
 #флаги для компилятора 
-OPT = -Os
+OPT = -O2
 C_FLAGS = -mmcu=$(MCU) $(OPT) -Wall
 
 # параметры для AVRDUDE
@@ -29,34 +31,32 @@ DEFINES = \
 -DF_CPU=16000000UL
 
 # пути к заголовочным файлам
-C_INCLUDES = \
--I/usr/lib/avr/include
+C_INCLUDES = -I/usr/lib/avr/include -I$(INCLUDE_DIR)
 
 # файлы программы
-C_SOURCES = src/main.cpp
+C_SOURCES = $(wildcard $(SOURCE_DIR)/*.c)
 
 # служебные переменные
-OBJ_FILES = $(C_SOURCES:.cpp=.o)
-ASM_FILES = $(C_SOURCES:.cpp=.s)
+OBJ_FILES = $(C_SOURCES:.c=.o)
 OUT_OBJ = $(addprefix $(BUILD_DIR)/, $(notdir $(OBJ_FILES)))
 
-# правила для сборки
+# ------------------------------ Правила сборки ------------------------------
 all: $(TARGET).hex 
 
 $(TARGET).hex: $(TARGET).elf
-	$(AVRCCDIR)$(OBJCOPY) -j .text -j .data -O ihex $(BUILD_DIR)/$< $(BUILD_DIR)/$@
+	@echo "Building .hex file"
+	@$(AVRCCDIR)$(OBJCOPY) -j .text -j .data -O ihex $(BUILD_DIR)/$< $(BUILD_DIR)/$@
+	@echo "Firmware compile COMPLITED!"
+	@rm $(BUILD_DIR)/*.o $(BUILD_DIR)/*.elf
 
-$(TARGET).elf: $(OBJ_FILES) $(ASM_FILES)
-	mkdir -p $(BUILD_DIR)
-	$(AVRCCDIR)$(CC) $(C_FLAGS) $(DEFINES) $(OUT_OBJ) -o $(BUILD_DIR)/$@
+$(TARGET).elf: $(OBJ_FILES)
+	@echo "Building .elf file"
+	@mkdir -p $(BUILD_DIR)
+	@$(AVRCCDIR)$(CC) $(C_FLAGS) $(DEFINES) $(OUT_OBJ) -o $(BUILD_DIR)/$@
 
-%.o: %.cpp
-	echo $^
-	$(AVRCCDIR)$(CC) -c $(C_FLAGS) $(DEFINES) $(C_INCLUDES) $< -o $(BUILD_DIR)/$(@F)
-	
-%.s: %.cpp
-	echo $^
-	$(AVRCCDIR)$(CC) -S -g3 $(C_FLAGS) $(DEFINES) $(C_INCLUDES) $< -o $(BUILD_DIR)/$(@F)
+%.o : %.c
+	@echo "Building $^"
+	@$(AVRCCDIR)$(CC) -c $(C_FLAGS) $(DEFINES) $(C_INCLUDES) $< -o $(BUILD_DIR)/$(@F)
 
 clean:
 	rm -f $(BUILD_DIR)/*
